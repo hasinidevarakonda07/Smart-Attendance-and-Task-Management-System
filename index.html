@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduTrack – SRM AP</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy:#f5f0eb; --panel:#fdfaf7; --card:#ffffff; --card2:#f7f3ef;
+  --accent:#8b7cf8; --mint:#52b788; --gold:#f4a261; --rose:#e07a8f;
+  --white:#2a2040; --muted:#9a8fa0; --border:rgba(139,124,248,0.13);
+  --sidebar-w:248px;
+  --shadow:0 2px 12px rgba(139,124,248,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);background:var(--panel);border-right:1px solid rgba(139,124,248,0.15);display:flex;flex-direction:column;padding:24px 0;flex-shrink:0;box-shadow:2px 0 16px rgba(139,124,248,0.06);}
+.sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.logo-text{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--mint));background-clip: text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 20px;font-size:14px;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .2s;border-radius:0 8px 8px 0;margin:1px 8px 1px 0;}
+.nav-item:hover{color:var(--accent);background:rgba(139,124,248,.07);}
+.nav-item.active{color:var(--accent);background:rgba(139,124,248,.1);border-left-color:var(--accent);font-weight:600;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+.user-info{display:flex;align-items:center;gap:10px;}
+.user-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--mint));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:11px;color:var(--muted);}
+.logout-btn{display:block;width:100%;margin-top:12px;padding:8px;background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.2);border-radius:8px;color:#ff9999;font-size:12px;cursor:pointer;text-align:center;transition:all .2s;text-decoration:none;}
+.logout-btn:hover{background:rgba(255,100,100,.2);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{padding:14px 28px;border-bottom:1px solid rgba(139,124,248,0.12);display:flex;align-items:center;justify-content:space-between;background:var(--panel);box-shadow:0 1px 8px rgba(139,124,248,0.07);}
+.topbar-title{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.notif-btn{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:16px;transition:all .2s;}
+.notif-btn:hover{border-color:rgba(139,124,248,.5);}
+.notif-badge{position:absolute;top:-6px;right:-6px;background:var(--rose);color:#fff;width:18px;height:18px;border-radius:50%;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.content{flex:1;overflow-y:auto;padding:24px 28px;}
+.panel{display:none;} .panel.active{display:block;}
+
+/* Cards */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:var(--card);border:1px solid rgba(139,124,248,.12);border-radius:14px;padding:18px;transition:all .25s;box-shadow:var(--shadow);}
+.stat-card:hover{transform:translateY(-2px);border-color:rgba(139,124,248,.3);box-shadow:0 4px 20px rgba(139,124,248,.12);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.stat-value{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800;}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+.val-blue{color:var(--accent);} .val-mint{color:var(--mint);} .val-gold{color:var(--gold);} .val-rose{color:var(--rose);}
+
+.chart-card{background:var(--card);border:1px solid rgba(139,124,248,.12);border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.card-title span{font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400;}
+.charts-row{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:16px;}
+
+/* Attendance bars */
+.subject-att-bar{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.sub-name{font-size:13px;flex:0 0 140px;}
+.bar-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:100px;height:7px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:100px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.sub-pct{font-size:12px;font-family:'Syne',sans-serif;font-weight:700;min-width:40px;text-align:right;}
+.pct-ok{background:linear-gradient(90deg,#a78bfa,#52b788);color:#52b788;}
+.pct-warn{background:linear-gradient(90deg,#f59e0b,var(--gold));color:var(--gold);}
+.pct-bad{background:var(--rose);color:var(--rose);}
+
+/* Timetable */
+.tt-header{display:grid;grid-template-columns:80px repeat(5,1fr);gap:2px;margin-bottom:2px;}
+.tt-head-cell{background:var(--card2);padding:8px;text-align:center;font-size:12px;font-family:'Syne',sans-serif;color:var(--muted);border-radius:6px;}
+.tt-row{display:grid;grid-template-columns:80px repeat(5,1fr);gap:2px;margin-bottom:2px;}
+.tt-time{background:var(--card2);padding:8px 4px;font-size:11px;color:var(--muted);text-align:center;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.tt-cell{background:var(--card2);border-radius:6px;padding:10px 8px;font-size:12px;min-height:58px;display:flex;flex-direction:column;justify-content:center;transition:all .2s;}
+.tt-cell.has-class{background:rgba(139,124,248,.08);border:1px solid rgba(139,124,248,.2);}
+.tt-cell.free{background:rgba(61,255,197,.07);border:1px solid rgba(61,255,197,.18);}
+.tt-cell.current{background:rgba(245,200,66,.14);border:1px solid rgba(245,200,66,.4);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,200,66,.3)}50%{box-shadow:0 0 0 6px rgba(245,200,66,0)}}
+.tt-subj{font-weight:500;font-size:12px;} .tt-room{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* Tasks */
+.tasks-controls{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.task-filter-btn{padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;transition:all .2s;}
+.task-filter-btn.active,.task-filter-btn:hover{background:rgba(139,124,248,.12);border-color:rgba(139,124,248,.35);color:var(--accent);}
+.add-task-btn{margin-left:auto;padding:8px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+.add-task-btn:hover{background:#7c6de0;}
+.task-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;transition:all .2s;}
+.task-item:hover{border-color:rgba(139,124,248,.3);box-shadow:0 2px 12px rgba(139,124,248,.08);}
+.task-cb{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;margin-top:2px;transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.task-cb.done{background:var(--mint);border-color:var(--mint);}
+.task-cb.done::after{content:'✓';font-size:11px;color:var(--navy);font-weight:700;}
+.task-body{flex:1;} .task-title{font-size:14px;font-weight:500;} .task-title.done-text{text-decoration:line-through;color:var(--muted);}
+.task-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.task-badge{font-size:11px;padding:2px 8px;border-radius:20px;font-family:'Syne',sans-serif;}
+.badge-study{background:rgba(79,142,247,.2);color:var(--accent);} .badge-career{background:rgba(245,200,66,.2);color:var(--gold);}
+.badge-skill{background:rgba(61,255,197,.2);color:var(--mint);} .badge-personal{background:rgba(255,107,107,.2);color:var(--rose);}
+.pri-high{color:var(--rose);font-size:11px;} .pri-medium{color:var(--gold);font-size:11px;} .pri-low{color:var(--muted);font-size:11px;}
+.task-suggested-tag{font-size:10px;color:var(--mint);background:rgba(61,255,197,.1);padding:1px 6px;border-radius:10px;}
+.task-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px;border-radius:4px;transition:color .2s;}
+.task-del:hover{color:var(--rose);}
+
+/* Suggestions */
+.suggestions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.suggestion-card{background:linear-gradient(135deg,rgba(139,124,248,.08),rgba(82,183,136,.06));border:1px solid rgba(139,124,248,.2);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;}
+.suggestion-card:hover{transform:translateY(-2px);border-color:rgba(139,124,248,.45);box-shadow:0 4px 16px rgba(139,124,248,.12);}
+.sug-icon{font-size:20px;margin-bottom:8px;} .sug-title{font-size:13px;font-weight:500;margin-bottom:4px;} .sug-cat{font-size:11px;color:var(--mint);}
+.sug-add-btn{margin-top:10px;width:100%;padding:6px;background:rgba(139,124,248,.12);border:1px solid rgba(139,124,248,.25);border-radius:6px;color:var(--white);font-size:12px;cursor:pointer;transition:all .2s;}
+.sug-add-btn:hover{background:rgba(139,124,248,.25);}
+
+/* ── LEADERBOARD ── */
+.lb-table{width:100%;border-collapse:separate;border-spacing:0 6px;}
+.lb-row{background:var(--card2);border-radius:10px;transition:all .2s;}
+.lb-row:hover{background:rgba(139,124,248,.07);}
+.lb-row.me-row{background:rgba(139,124,248,.1);outline:1px solid rgba(139,124,248,.3);}
+.lb-row td{padding:12px 14px;font-size:13px;vertical-align:middle;}
+.lb-rank{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;min-width:36px;}
+.rank-1{color:var(--gold);} .rank-2{color:#c0c0c0;} .rank-3{color:#cd7f32;}
+.lb-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.lb-name-col{display:flex;align-items:center;gap:10px;}
+.lb-driver-name{font-size:13px;font-weight:500;}
+
+.lb-score{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:var(--gold);}
+.lb-pct-bar{background:rgba(255,255,255,.06);border-radius:100px;height:6px;width:90px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;}
+.lb-pct-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,#a78bfa,#52b788);}
+
+
+/* Profile Card */
+.driver-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:16px;}
+.driver-card-banner{height:80px;display:flex;align-items:flex-end;padding:16px;position:relative;overflow:hidden;}
+.driver-card-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent),var(--mint));opacity:.15;}
+
+.driver-card-body{padding:20px;}
+.driver-big-name{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:4px;}
+
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.profile-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;}
+.profile-field input,.profile-field select{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.profile-field input:focus,.profile-field select:focus{border-color:var(--accent);}
+.save-profile-btn{margin-top:16px;padding:10px 24px;background:linear-gradient(135deg,var(--accent),#3b6fd4);border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.save-profile-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(139,124,248,.25);}
+
+/* Attendance panel */
+.att-form{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
+.form-inline{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.inline-group{display:flex;flex-direction:column;gap:6px;}
+.inline-group label{font-size:12px;color:var(--muted);}
+.inline-group select,.inline-group input{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.load-btn{padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-size:13px;font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;transition:all .2s;}
+.load-btn:hover{background:#7c6de0;}
+.student-att-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card2);border-radius:10px;margin-bottom:6px;}
+.stu-name{flex:1;font-size:14px;}
+.att-radio{display:none;}
+.att-label{padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--border);transition:all .2s;}
+.att-radio:checked+.att-label.present-l{background:rgba(61,255,197,.2);border-color:var(--mint);color:var(--mint);}
+.att-radio:checked+.att-label.absent-l{background:rgba(255,107,107,.2);border-color:var(--rose);color:var(--rose);}
+.att-radio:checked+.att-label.late-l{background:rgba(245,200,66,.2);border-color:var(--gold);color:var(--gold);}
+.submit-att-btn{width:100%;padding:12px;margin-top:14px;background:linear-gradient(135deg,var(--accent),#3b6fd4);border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.submit-att-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(139,124,248,.25);}
+
+/* Notifications */
+.notif-item{display:flex;gap:14px;padding:13px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;transition:all .2s;}
+.notif-item.unread{border-left:3px solid var(--accent);background:rgba(139,124,248,.04);}
+.notif-item.type-warning{border-left-color:var(--rose);}
+.notif-item.type-success{border-left-color:var(--mint);}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px;}
+.notif-msg{font-size:13px;line-height:1.5;}
+.notif-time{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* QR */
+.qr-section{background:var(--card);border:1px solid rgba(139,124,248,.25);border-radius:14px;padding:24px;margin-top:14px;text-align:center;}
+.qr-box{width:160px;height:160px;margin:0 auto 16px;background:#fff;border-radius:12px;padding:12px;display:flex;align-items:center;justify-content:center;font-size:90px;}
+.qr-scan-btn{padding:10px 28px;background:linear-gradient(135deg,var(--accent),var(--mint));border:none;border-radius:10px;color:var(--navy);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;}
+.qr-scan-btn:hover{transform:scale(1.03);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:420px;max-width:90vw;transform:scale(.9);transition:transform .25s;}
+.modal-overlay.open .modal{transform:scale(1);}
+.modal-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:20px;}
+.modal-group{margin-bottom:14px;}
+.modal-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.modal-group input,.modal-group select,.modal-group textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.modal-group textarea{height:80px;resize:vertical;}
+.modal-btns{display:flex;gap:10px;margin-top:20px;}
+.modal-btn{flex:1;padding:10px;border-radius:8px;font-size:13px;font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.modal-btn.primary{background:var(--accent);color:#fff;} .modal-btn.secondary{background:rgba(139,124,248,.08);color:var(--muted);}
+.modal-btn.secondary{background:rgba(255,255,255,.06);color:var(--muted);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;z-index:2000;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{border-left:3px solid var(--mint);} .toast.error{border-left:3px solid var(--rose);} .toast.info{border-left:3px solid var(--accent);}
+
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(139,124,248,.2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">EduTrack</div>
+    <div class="logo-sub">SRM AP · Smart Campus</div>
+  </div>
+  <div id="nav-links"></div>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="sb-avatar">?</div>
+      <div style="min-width:0">
+        <div class="user-name" id="sb-name">Loading…</div>
+        <div class="user-role" id="sb-role">–</div>
+      </div>
+    </div>
+    <a href="/logout" class="logout-btn">⬡ Sign Out</a>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-right">
+      <div id="topbar-date" style="font-size:12px;color:var(--muted)"></div>
+      <div class="notif-btn" onclick="showPanel('notifications')">
+        🔔 <span class="notif-badge" id="notif-count" style="display:none">0</span>
+      </div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="panel active" id="panel-dashboard"></div>
+    <div class="panel" id="panel-timetable"></div>
+    <div class="panel" id="panel-attendance"></div>
+    <div class="panel" id="panel-tasks"></div>
+    <div class="panel" id="panel-leaderboard"></div>
+    <div class="panel" id="panel-analytics"></div>
+    <div class="panel" id="panel-profile"></div>
+    <div class="panel" id="panel-notifications"></div>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-title">➕ Add New Task</div>
+    <div class="modal-group"><label>Title *</label><input id="t-title" placeholder="Task title"></div>
+    <div class="modal-group"><label>Description</label><textarea id="t-desc" placeholder="Details…"></textarea></div>
+    <div style="display:flex;gap:10px">
+      <div class="modal-group" style="flex:1"><label>Category</label>
+        <select id="t-cat"><option value="study">📚 Study</option><option value="career">🎯 Career</option><option value="skill">⚡ Skill</option><option value="personal">🌱 Personal</option></select>
+      </div>
+      <div class="modal-group" style="flex:1"><label>Priority</label>
+        <select id="t-pri"><option value="high">🔴 High</option><option value="medium">🟡 Medium</option><option value="low">🟢 Low</option></select>
+      </div>
+    </div>
+    <div class="modal-group"><label>Due Date</label><input type="date" id="t-due"></div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── AVATAR COLORS (simple rotating palette, no F1 branding) ──
+const AVATAR_COLORS = [
+  '#4f8ef7','#3dffc5','#f5c842','#ff6b6b','#a78bfa',
+  '#34d399','#fb923c','#60a5fa','#f472b6','#facc15'
+];
+function getAvatarColor(name) {
+  let h = 0;
+  for(let i=0;i<name.length;i++) h = name.charCodeAt(i) + ((h<<5)-h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+let me = null, currentPanel = 'dashboard', mySubjects = [], allStudents = [];
+
+async function init() {
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const res = await fetch('/api/me');
+  me = await res.json();
+  if (me.error) { location.href='/'; return; }
+  document.getElementById('sb-avatar').textContent = me.name[0].toUpperCase();
+  document.getElementById('sb-name').textContent = me.name;
+  document.getElementById('sb-role').textContent = me.role.charAt(0).toUpperCase()+me.role.slice(1)+' · '+(me.department||'');
+  buildNav(); loadDashboard(); loadNotifBadge();
+}
+
+function buildNav() {
+  const studentNav = [{id:'dashboard',icon:'🏠',label:'Dashboard'},{id:'timetable',icon:'📅',label:'Timetable'},{id:'attendance',icon:'✅',label:'Attendance'},{id:'tasks',icon:'📋',label:'Tasks'},{id:'leaderboard',icon:'🏆',label:'Leaderboard'},{id:'analytics',icon:'📈',label:'Analytics'},{id:'profile',icon:'🪪',label:'My Profile'},{id:'notifications',icon:'🔔',label:'Notifications'}];
+  const teacherNav = [{id:'dashboard',icon:'🏠',label:'Dashboard'},{id:'timetable',icon:'📅',label:'Timetable'},{id:'attendance',icon:'✅',label:'Mark Attendance'},{id:'leaderboard',icon:'🏆',label:'Leaderboard'},{id:'analytics',icon:'📈',label:'Analytics'},{id:'notifications',icon:'🔔',label:'Notifications'}];
+  const adminNav = [{id:'dashboard',icon:'🏠',label:'Dashboard'},{id:'timetable',icon:'📅',label:'Timetable'},{id:'attendance',icon:'✅',label:'Attendance'},{id:'leaderboard',icon:'🏆',label:'Leaderboard'},{id:'analytics',icon:'📈',label:'Analytics'},{id:'notifications',icon:'🔔',label:'Notifications'}];
+  const nav = me.role==='student'?studentNav:me.role==='teacher'?teacherNav:adminNav;
+  const container = document.getElementById('nav-links');
+  nav.forEach(item => {
+    const el = document.createElement('div');
+    el.className='nav-item'+(item.id==='dashboard'?' active':'');
+    el.id='nav-'+item.id;
+    el.innerHTML=`<span class="nav-icon">${item.icon}</span>${item.label}`;
+    el.onclick=()=>showPanel(item.id);
+    container.appendChild(el);
+  });
+}
+
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  const navEl = document.getElementById('nav-'+id);
+  if(navEl) navEl.classList.add('active');
+  currentPanel = id;
+  const titles={dashboard:'Dashboard',timetable:'Timetable',attendance:'Attendance',tasks:'Tasks & Goals',leaderboard:'🏆 Leaderboard',analytics:'Analytics',profile:'My Profile',notifications:'Notifications'};
+  document.getElementById('topbar-title').textContent=titles[id]||id;
+  if(id==='timetable') loadTimetable();
+  else if(id==='attendance') loadAttendancePanel();
+  else if(id==='tasks') loadTasks();
+  else if(id==='leaderboard') loadLeaderboard();
+  else if(id==='analytics') loadAnalytics();
+  else if(id==='profile') loadProfile();
+  else if(id==='notifications') loadNotifications();
+}
+
+// ── DASHBOARD ──
+async function loadDashboard() {
+  const res = await fetch('/api/stats');
+  const stats = await res.json();
+  const panel = document.getElementById('panel-dashboard');
+  if(me.role==='student') {
+    const attColor = stats.overall_attendance>=75?'val-mint':'val-rose';
+    const avc = getAvatarColor(me.name);
+    panel.innerHTML=`
+      <!-- Student Banner -->
+      <div style="background:rgba(139,124,248,.06);border:1px solid rgba(139,124,248,.15);border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:18px;">
+        <div style="width:52px;height:52px;border-radius:50%;background:${avc}22;border:2px solid ${avc};display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-size:1.3rem;font-weight:800;color:${avc};flex-shrink:0">${me.name[0]}</div>
+        <div>
+          <div style="font-family:Syne,sans-serif;font-size:1.25rem;font-weight:800">${me.name}</div>
+          <div style="font-size:12px;color:#8b7cf8;margin-top:3px">📧 ${me.email} · ${me.department}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">🎯 Goal: ${me.career_goal||'Not set'}</div>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:8px">📊</div>
+          <div class="stat-label">Overall Attendance</div>
+          <div class="stat-value ${attColor}">${stats.overall_attendance}%</div>
+          <div class="stat-sub">${stats.overall_attendance>=75?'✅ On track':'⚠️ Below 75%!'}</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:8px">🔥</div>
+          <div class="stat-label">Week Streak</div>
+          <div class="stat-value val-gold">${stats.streak}</div>
+          <div class="stat-sub">classes this week</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:8px">✅</div>
+          <div class="stat-label">Tasks Done</div>
+          <div class="stat-value val-mint">${stats.tasks_done}</div>
+          <div class="stat-sub">${stats.tasks_pending} still pending</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-size:18px;margin-bottom:8px">🔔</div>
+          <div class="stat-label">Alerts</div>
+          <div class="stat-value val-blue">${stats.unread_notifications}</div>
+          <div class="stat-sub">unread</div>
+        </div>
+      </div>
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="card-title">Subject Attendance <span>This Semester</span></div>
+          ${stats.subject_attendance.map(s=>{
+            const cls=s.pct>=75?'pct-ok':s.pct>=60?'pct-warn':'pct-bad';
+            return `<div class="subject-att-bar"><div class="sub-name">${s.name}</div><div class="bar-wrap"><div class="bar-fill ${cls}" style="width:${s.pct}%"></div></div><div class="sub-pct ${cls}">${s.pct}%</div></div>`;
+          }).join('')}
+        </div>
+        <div class="chart-card">
+          <div class="card-title">Today <span>${new Date().toLocaleDateString('en-IN',{weekday:'long'})}</span></div>
+          <div id="today-slots">Loading…</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title">🤖 AI Task Suggestions for Free Periods <span style="cursor:pointer;color:var(--accent)" onclick="loadDashSuggestions()">↻ Refresh</span></div>
+        <div id="sug-grid" class="suggestions-grid">Loading…</div>
+      </div>`;
+    loadTodaySlots(); loadDashSuggestions();
+  } else if(me.role==='teacher') {
+    panel.innerHTML=`<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">📚</div><div class="stat-label">My Subjects</div><div class="stat-value val-blue">${stats.my_subjects}</div></div>
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">👨‍🎓</div><div class="stat-label">Students</div><div class="stat-value val-mint">${stats.total_students}</div></div>
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">✅</div><div class="stat-label">Today's Records</div><div class="stat-value val-gold">${stats.today_attendance_records}</div></div>
+    </div>
+    <div class="chart-card"><div class="card-title">Quick Action</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Mark today's attendance or view the student leaderboard.</p>
+      <div style="display:flex;gap:10px">
+        <button class="load-btn" onclick="showPanel('attendance')">Mark Attendance →</button>
+        <button class="load-btn" style="background:rgba(245,200,66,.3)" onclick="showPanel('leaderboard')">🏆 Leaderboard</button>
+      </div>
+    </div>`;
+  } else {
+    panel.innerHTML=`<div class="stats-grid">
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">👨‍🎓</div><div class="stat-label">Students</div><div class="stat-value val-blue">${stats.total_students}</div></div>
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">👩‍🏫</div><div class="stat-label">Teachers</div><div class="stat-value val-mint">${stats.total_teachers}</div></div>
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">✅</div><div class="stat-label">Today's Records</div><div class="stat-value val-gold">${stats.today_records}</div></div>
+      <div class="stat-card"><div style="font-size:18px;margin-bottom:8px">⚠️</div><div class="stat-label">Low Attendance</div><div class="stat-value val-rose">${stats.low_attendance_count}</div></div>
+    </div>`;
+  }
+}
+
+async function loadTodaySlots() {
+  const day = new Date().toLocaleDateString('en-US',{weekday:'long'});
+  const res = await fetch('/api/timetable');
+  const slots = await res.json();
+  const today = slots.filter(s=>s.day===day).sort((a,b)=>a.start.localeCompare(b.start));
+  const now = new Date().toTimeString().slice(0,5);
+  const el = document.getElementById('today-slots');
+  if(!today.length){el.innerHTML='<p style="color:var(--muted);font-size:13px">No classes today!</p>';return;}
+  el.innerHTML=today.map(s=>{
+    const cur=now>=s.start&&now<=s.end;
+    const bcolor=s.is_free?'var(--mint)':cur?'var(--gold)':'var(--accent)';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px 10px;background:#faf7f4;border-radius:8px;border-left:3px solid ${bcolor};box-shadow:0 1px 4px rgba(139,124,248,.07)">
+      <div style="font-size:11px;color:var(--muted);min-width:84px">${s.start}–${s.end}</div>
+      <div><div style="font-size:13px;font-weight:500">${s.subject}</div>
+      <div style="font-size:11px;color:var(--muted)">${s.room}${cur?' · 🔴 LIVE':''}${s.is_free?' · Free Period':''}</div></div>
+    </div>`;
+  }).join('');
+}
+
+async function loadDashSuggestions() {
+  const res = await fetch('/api/tasks/suggest');
+  const sug = await res.json();
+  const icons={study:'📚',career:'🎯',skill:'⚡',personal:'🌱'};
+  document.getElementById('sug-grid').innerHTML = sug.map(s=>`
+    <div class="suggestion-card">
+      <div class="sug-icon">${icons[s.category]||'✨'}</div>
+      <div class="sug-title">${s.title}</div>
+      <div class="sug-cat">${s.category} · ${s.priority} priority</div>
+      <button class="sug-add-btn" onclick="addSuggestedTask('${s.title.replace(/'/g,"\\'")}','${s.category}','${s.priority}')">+ Add to Tasks</button>
+    </div>`).join('')||'<p style="color:var(--muted)">No suggestions right now.</p>';
+}
+
+// ── TIMETABLE ──
+async function loadTimetable() {
+  const res = await fetch('/api/timetable');
+  const slots = await res.json();
+  const days=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+  const times=[...new Set(slots.map(s=>s.start))].sort();
+  const now=new Date().toTimeString().slice(0,5);
+  const today=new Date().toLocaleDateString('en-US',{weekday:'long'});
+  const panel=document.getElementById('panel-timetable');
+  // Period labels matching the image
+  const periodLabel = {'09:00':'P1','10:00':'P2','11:00':'P3','12:00':'BREAK','13:00':'P4','14:00':'P5','15:00':'P6'};
+  let html=`<div class="chart-card"><div class="card-title">Weekly Timetable <span>${me.department} · ${new Date().getFullYear()}</span></div><div style="overflow-x:auto">
+    <div class="tt-header"><div class="tt-head-cell">Period</div>${days.map(d=>`<div class="tt-head-cell" style="${d===today?'color:var(--accent);font-weight:700;border-bottom:2px solid var(--accent)':''}">${d.slice(0,3)}</div>`).join('')}</div>`;
+  times.forEach(t=>{
+    const eSlot=slots.find(s=>s.start===t);
+    const isBreak = eSlot?.is_free && !['Monday','Tuesday','Wednesday','Thursday','Friday'].some(d=>slots.find(s=>s.day===d&&s.start===t&&!s.is_free));
+    const pLabel = periodLabel[t]||t;
+    html+=`<div class="tt-row"><div class="tt-time" style="${t==='12:00'?'color:var(--gold);font-size:10px':''}">${pLabel}<br><span style="font-size:9px;color:var(--muted)">${t}–${eSlot?.end||''}</span></div>`;
+    days.forEach(d=>{
+      const slot=slots.find(s=>s.day===d&&s.start===t);
+      const cur=d===today&&now>=t&&now<=(slot?.end||'');
+      let cls=''; let inner='—';
+      if(slot){
+        cls=slot.is_free?'free':cur?'current':'has-class';
+        inner=slot.is_free?`<div class="tt-subj" style="color:var(--mint)">Free</div>`:
+          `<div class="tt-subj">${slot.subject}</div><div class="tt-room">${slot.room}${cur?' <span style="color:var(--rose)">●</span>':''}</div>`;
+      }
+      html+=`<div class="tt-cell ${cls}" style="${t==='12:00'?'background:rgba(245,158,11,.05);':''}">${inner}</div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`</div></div>`;
+  if(me.role==='student'){
+    html+=`<div class="qr-section">
+      <h3 style="font-family:Syne,sans-serif;margin-bottom:12px">📱 QR Code Attendance</h3>
+      <div class="qr-box">📷</div>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Scan the classroom QR to auto-mark attendance. Works with active classes only.</p>
+      <button class="qr-scan-btn" onclick="simulateQR()">📸 Simulate QR Scan</button>
+    </div>`;
+  }
+  panel.innerHTML=html;
+}
+
+async function simulateQR() {
+  const res=await fetch('/api/timetable');
+  const slots=await res.json();
+  const today=new Date().toLocaleDateString('en-US',{weekday:'long'});
+  const now=new Date().toTimeString().slice(0,5);
+  const active=slots.find(s=>s.day===today&&!s.is_free&&now>=s.start&&now<=s.end);
+  if(!active){showToast('No active class right now for QR.','info');return;}
+  const r=await fetch('/api/attendance/qr-mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slot_id:active.id})});
+  const d=await r.json();
+  showToast(d.message,d.success?'success':'info');
+}
+
+// ── ATTENDANCE ──
+async function loadAttendancePanel() {
+  const panel=document.getElementById('panel-attendance');
+  if(me.role==='student') {
+    const res=await fetch('/api/attendance');
+    const records=await res.json();
+    panel.innerHTML=`<div class="chart-card"><div class="card-title">Attendance History <span>Last 30 records</span></div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr style="font-size:11px;color:var(--muted);text-align:left">
+          <th style="padding:8px 12px">Date</th><th style="padding:8px 12px">Subject</th><th style="padding:8px 12px">Status</th><th style="padding:8px 12px">Method</th>
+        </tr></thead><tbody>
+        ${records.map(r=>{
+          const sc=r.status==='present'?'var(--mint)':r.status==='late'?'var(--gold)':'var(--rose)';
+          return `<tr style="border-top:1px solid var(--border)">
+            <td style="padding:9px 12px;font-size:13px">${r.date}</td>
+            <td style="padding:9px 12px;font-size:13px">${r.subject}</td>
+            <td style="padding:9px 12px"><span style="color:${sc};font-size:12px;font-weight:600;font-family:Syne">${r.status.toUpperCase()}</span></td>
+            <td style="padding:9px 12px;font-size:12px;color:var(--muted)">${r.marked_by}</td>
+          </tr>`;}).join('')}
+        </tbody></table></div></div>`;
+  } else {
+    const subjRes=await fetch('/api/subjects');
+    mySubjects=await subjRes.json();
+    const studRes=await fetch('/api/students');
+    allStudents=await studRes.json();
+    panel.innerHTML=`
+      <div class="att-form">
+        <div class="card-title" style="margin-bottom:16px">📋 Mark Attendance</div>
+        <div class="form-inline">
+          <div class="inline-group"><label>Subject</label>
+            <select id="att-subject">${mySubjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
+          </div>
+          <div class="inline-group"><label>Date</label><input type="date" id="att-date" value="${new Date().toISOString().split('T')[0]}"></div>
+          <div class="inline-group"><label>Method</label>
+            <select id="att-method"><option value="manual">Manual</option><option value="qr">QR</option><option value="face">Face Recognition</option></select>
+          </div>
+          <button class="load-btn" onclick="loadStudentList()">Load Students</button>
+          <a href="/api/export/attendance" class="load-btn" style="text-decoration:none;background:rgba(61,255,197,.2);color:var(--mint)">📥 Export CSV</a>
+        </div>
+      </div>
+      <div id="student-list" class="chart-card"><p style="color:var(--muted);font-size:13px">Select a subject and click Load Students.</p></div>`;
+  }
+}
+
+function loadStudentList() {
+  const container=document.getElementById('student-list');
+  container.innerHTML=`<div class="card-title">Students <span>Mark attendance below</span></div>`+
+    allStudents.map(s=>{
+      const pctColor=s.attendance_pct>=75?'var(--mint)':'var(--rose)';
+      return `<div class="student-att-row">
+        <div class="stu-name">${s.name} <span style="font-size:11px;color:${pctColor}">(${s.attendance_pct}%)</span></div>
+        <div style="display:flex;gap:6px">
+          <input type="radio" name="att-${s.id}" id="p-${s.id}" class="att-radio" value="present">
+          <label for="p-${s.id}" class="att-label present-l">✅ Present</label>
+          <input type="radio" name="att-${s.id}" id="a-${s.id}" class="att-radio" value="absent">
+          <label for="a-${s.id}" class="att-label absent-l">❌ Absent</label>
+          <input type="radio" name="att-${s.id}" id="l-${s.id}" class="att-radio" value="late">
+          <label for="l-${s.id}" class="att-label late-l">🕐 Late</label>
+        </div>
+      </div>`;
+    }).join('')+`<button class="submit-att-btn" onclick="submitAttendance()">Submit Attendance</button>`;
+}
+
+async function submitAttendance() {
+  const subjId=parseInt(document.getElementById('att-subject').value);
+  const attDate=document.getElementById('att-date').value;
+  const method=document.getElementById('att-method').value;
+  const subjName=mySubjects.find(s=>s.id===subjId)?.name||'';
+  const students=allStudents.map(s=>{
+    const checked=document.querySelector(`input[name="att-${s.id}"]:checked`);
+    return{student_id:s.id,status:checked?checked.value:'absent'};
+  });
+  const res=await fetch('/api/attendance/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject_id:subjId,date:attDate,method,subject_name:subjName,students})});
+  const data=await res.json();
+  showToast(data.message,'success');
+}
+
+// ── TASKS ──
+let currentFilter='all';
+async function loadTasks() {
+  const panel=document.getElementById('panel-tasks');
+  if(me.role!=='student'){panel.innerHTML='<p style="color:var(--muted)">Tasks are for students only.</p>';return;}
+  const res=await fetch('/api/tasks');
+  const tasks=await res.json();
+  const icons={study:'📚',career:'🎯',skill:'⚡',personal:'🌱'};
+  const filtered=currentFilter==='all'?tasks:tasks.filter(t=>currentFilter==='done'?t.status==='done':t.status!=='done');
+  panel.innerHTML=`<div class="tasks-controls">
+    <button class="task-filter-btn ${currentFilter==='all'?'active':''}" onclick="setFilter('all')">All (${tasks.length})</button>
+    <button class="task-filter-btn ${currentFilter==='pending'?'active':''}" onclick="setFilter('pending')">Pending</button>
+    <button class="task-filter-btn ${currentFilter==='done'?'active':''}" onclick="setFilter('done')">Completed</button>
+    <button class="add-task-btn" onclick="document.getElementById('task-modal').classList.add('open')">+ Add Task</button>
+  </div>
+  ${filtered.length===0?'<p style="color:var(--muted);font-size:14px">No tasks here.</p>':
+    filtered.map(t=>`<div class="task-item">
+      <div class="task-cb ${t.status==='done'?'done':''}" onclick="toggleTask(${t.id},'${t.status}')"></div>
+      <div class="task-body">
+        <div class="task-title ${t.status==='done'?'done-text':''}">${t.title} ${t.is_suggested?'<span class="task-suggested-tag">AI</span>':''}</div>
+        <div class="task-meta">
+          <span class="task-badge badge-${t.category}">${icons[t.category]||''} ${t.category}</span>
+          <span class="pri-${t.priority}">● ${t.priority}</span>
+          ${t.due_date?`<span style="font-size:11px;color:var(--muted)">📅 ${t.due_date}</span>`:''}
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask(${t.id})">🗑</button>
+    </div>`).join('')}`;
+}
+function setFilter(f){currentFilter=f;loadTasks();}
+async function toggleTask(id,status){
+  await fetch(`/api/tasks/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:status==='done'?'pending':'done'})});
+  loadTasks();
+}
+async function deleteTask(id){await fetch(`/api/tasks/${id}`,{method:'DELETE'});loadTasks();showToast('Task deleted','info');}
+async function saveTask(){
+  const data={title:document.getElementById('t-title').value,description:document.getElementById('t-desc').value,category:document.getElementById('t-cat').value,priority:document.getElementById('t-pri').value,due_date:document.getElementById('t-due').value||null};
+  if(!data.title){showToast('Title is required','error');return;}
+  await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  closeModal();showToast('Task added!','success');
+  if(currentPanel==='tasks') loadTasks();
+}
+async function addSuggestedTask(title,category,priority){
+  await fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,category,priority,is_suggested:true})});
+  showToast('Task added!','success');
+}
+function closeModal(){
+  document.getElementById('task-modal').classList.remove('open');
+  ['t-title','t-desc','t-due'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ── 🏆 LEADERBOARD ──
+async function loadLeaderboard() {
+  const panel=document.getElementById('panel-leaderboard');
+  panel.innerHTML=`<div class="chart-card"><div class="card-title">⏳ Loading leaderboard…</div></div>`;
+  const res=await fetch('/api/leaderboard');
+  const lb=await res.json();
+  const medals=['🥇','🥈','🥉'];
+  panel.innerHTML=`
+    <div class="chart-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="card-title" style="margin-bottom:0">🏆 Student Leaderboard</div>
+        <div style="font-size:12px;color:var(--muted)">Score = 70% Attendance + Tasks + Bonus</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:18px">Top students by attendance, completed tasks, and engagement.</div>
+      <table class="lb-table">
+        <thead><tr style="font-size:11px;color:var(--muted)">
+          <th style="padding:4px 14px;text-align:left">RANK</th>
+          <th style="padding:4px 14px;text-align:left">STUDENT</th>
+          <th style="padding:4px 14px;text-align:center">ATTENDANCE</th>
+          <th style="padding:4px 14px;text-align:center">TASKS</th>
+          <th style="padding:4px 14px;text-align:center">SCORE</th>
+        </tr></thead>
+        <tbody>
+          ${lb.map((d,i)=>{
+            const avc=getAvatarColor(d.name);
+            const pctCls=d.attendance_pct>=75?'pct-ok':d.attendance_pct>=60?'pct-warn':'pct-bad';
+            return `<tr class="lb-row ${d.is_me?'me-row':''}">
+              <td class="lb-rank ${i<3?'rank-'+(i+1):''}">${medals[i]||('#'+(i+1))}</td>
+              <td><div class="lb-name-col">
+                <div class="lb-avatar" style="background:${avc}22;border:1.5px solid ${avc};color:${avc}">${d.name[0]}</div>
+                <div><div class="lb-driver-name">${d.name}${d.is_me?' <span style="font-size:10px;color:var(--accent);background:rgba(79,142,247,.15);padding:1px 6px;border-radius:10px">YOU</span>':''}</div></div>
+              </div></td>
+              <td style="text-align:center">
+                <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                  <div class="lb-pct-bar"><div class="lb-pct-fill ${pctCls}" style="width:${d.attendance_pct}%"></div></div>
+                  <span style="font-size:12px;font-family:Syne;color:${d.attendance_pct>=75?'var(--mint)':'var(--rose)'}">${d.attendance_pct}%</span>
+                </div>
+              </td>
+              <td style="text-align:center;font-size:13px;color:var(--muted)">${d.tasks_done} ✅</td>
+              <td style="text-align:center" class="lb-score">${d.score}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── ANALYTICS ──
+async function loadAnalytics() {
+  const res=await fetch('/api/analytics/attendance-trend');
+  const trend=await res.json();
+  const panel=document.getElementById('panel-analytics');
+  panel.innerHTML=`
+    <div class="chart-card" style="margin-bottom:14px"><div class="card-title">Attendance Trend – Last 15 Days</div><canvas id="trend-chart" height="110"></canvas></div>
+    <div class="charts-row">
+      <div class="chart-card"><div class="card-title">Status Distribution</div><canvas id="pie-chart" height="190"></canvas></div>
+      <div class="chart-card"><div class="card-title">Average by Day</div><canvas id="bar-chart" height="190"></canvas></div>
+    </div>`;
+  setTimeout(()=>{
+    const labels=trend.map(d=>d.date.slice(5));
+    const pcts=trend.map(d=>d.pct);
+    new Chart(document.getElementById('trend-chart'),{type:'line',data:{labels,datasets:[{label:'Attendance %',data:pcts,borderColor:'#4f8ef7',backgroundColor:'rgba(79,142,247,.1)',fill:true,tension:.4,pointBackgroundColor:'#4f8ef7',pointRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6a7d96',callback:v=>v+'%'}},x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#6a7d96'}}}}});
+    new Chart(document.getElementById('pie-chart'),{type:'doughnut',data:{labels:['Present','Absent','Late'],datasets:[{data:[70,22,8],backgroundColor:['#3dffc5','#ff6b6b','#f5c842'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{labels:{color:'#e8f0fe',font:{family:'Syne'}}}},cutout:'65%'}});
+    new Chart(document.getElementById('bar-chart'),{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri'],datasets:[{label:'Avg %',data:[82,75,88,71,90],backgroundColor:'rgba(79,142,247,.6)',borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6a7d96',callback:v=>v+'%'}},x:{grid:{display:false},ticks:{color:'#6a7d96'}}}}});
+  },100);
+}
+
+// ── PROFILE ──
+async function loadProfile() {
+  const panel=document.getElementById('panel-profile');
+  if(me.role!=='student'){panel.innerHTML='<p style="color:var(--muted)">Profile editing for students only.</p>';return;}
+  const avc=getAvatarColor(me.name);
+  panel.innerHTML=`
+    <div class="driver-card">
+      <div class="driver-card-banner" style="background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(61,255,197,.1))">
+      </div>
+      <div class="driver-card-body">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="width:52px;height:52px;border-radius:50%;background:${avc}22;border:2px solid ${avc};display:flex;align-items:center;justify-content:center;font-family:Syne,sans-serif;font-size:1.3rem;font-weight:800;color:${avc};flex-shrink:0">${me.name[0]}</div>
+          <div>
+            <div class="driver-big-name">${me.name}</div>
+            <div style="font-size:12px;color:var(--muted)">${me.email}</div>
+          </div>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-field"><label>Department</label><input value="${me.department||''}" disabled style="opacity:.6"></div>
+          <div class="profile-field"><label>Role</label><input value="${me.role}" disabled style="opacity:.6"></div>
+          <div class="profile-field" style="grid-column:1/-1"><label>Career Goal</label><input id="prof-goal" value="${me.career_goal||''}" placeholder="e.g. data science, software engineer"></div>
+          <div class="profile-field" style="grid-column:1/-1"><label>Interests (comma-separated)</label><input id="prof-interests" value="${me.interests||''}" placeholder="e.g. coding, design, math"></div>
+        </div>
+        <button class="save-profile-btn" onclick="saveProfile()">💾 Save Profile</button>
+      </div>
+    </div>`;
+}
+
+async function saveProfile() {
+  const data={career_goal:document.getElementById('prof-goal').value,interests:document.getElementById('prof-interests').value};
+  await fetch('/api/profile/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  me.career_goal=data.career_goal; me.interests=data.interests;
+  showToast('Profile saved!','success');
+}
+
+// ── NOTIFICATIONS ──
+async function loadNotifBadge() {
+  const res=await fetch('/api/notifications');
+  const notifs=await res.json();
+  const unread=notifs.filter(n=>!n.is_read).length;
+  const badge=document.getElementById('notif-count');
+  badge.textContent=unread; badge.style.display=unread>0?'flex':'none';
+}
+
+async function loadNotifications() {
+  const res=await fetch('/api/notifications');
+  const notifs=await res.json();
+  const unread=notifs.filter(n=>!n.is_read).length;
+  document.getElementById('notif-count').textContent=unread;
+  document.getElementById('notif-count').style.display=unread>0?'flex':'none';
+  const panel=document.getElementById('panel-notifications');
+  panel.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <h2 style="font-family:Syne,sans-serif">Notifications</h2>
+    ${unread>0?`<button onclick="markAllRead()" style="background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);border-radius:8px;padding:6px 14px;color:var(--accent);font-size:13px;cursor:pointer">Mark All Read</button>`:''}
+  </div>
+  ${notifs.length===0?'<p style="color:var(--muted)">No notifications.</p>':
+    notifs.map(n=>`<div class="notif-item ${n.is_read?'':'unread'} type-${n.type}">
+      <div class="notif-dot" style="background:${n.type==='warning'?'var(--rose)':n.type==='success'?'var(--mint)':'var(--accent)'}"></div>
+      <div><div class="notif-msg">${n.message}</div><div class="notif-time">${new Date(n.created_at).toLocaleString('en-IN')}</div></div>
+    </div>`).join('')}`;
+}
+
+async function markAllRead(){
+  await fetch('/api/notifications/read-all',{method:'POST'});
+  loadNotifications(); showToast('All marked as read','success');
+}
+
+// ── TOAST ──
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast show ${type}`;
+  setTimeout(()=>t.className='toast',3000);
+}
+
+document.getElementById('task-modal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('task-modal')) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>
